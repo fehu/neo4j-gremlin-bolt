@@ -418,9 +418,12 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
      */
     @Override
     public Edge addEdge(String label, Vertex vertex, Object... keyValues) {
+        // validate label
         ElementHelper.validateLabel(label);
+        // vertex must exist
         if (vertex == null)
             throw Graph.Exceptions.argumentCanNotBeNull("vertex");
+        // validate properties
         ElementHelper.legalPropertyKeyValueArray(keyValues);
         // transaction should be ready for io operations
         graph.tx().readWrite();

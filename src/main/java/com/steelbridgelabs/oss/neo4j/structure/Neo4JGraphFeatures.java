@@ -165,6 +165,18 @@ public final class Neo4JGraphFeatures implements Graph.Features {
 
         private static class Neo4JVertexPropertyFeatures implements VertexPropertyFeatures {
 
+            private final boolean readonly;
+
+            Neo4JVertexPropertyFeatures(boolean readonly) {
+                this.readonly = readonly;
+            }
+
+            @Override
+            @FeatureDescriptor(name = FEATURE_REMOVE_PROPERTY)
+            public boolean supportsRemoveProperty() {
+                return !readonly;
+            }
+
             @Override
             @FeatureDescriptor(name = FEATURE_USER_SUPPLIED_IDS)
             public boolean supportsUserSuppliedIds() {
@@ -280,7 +292,27 @@ public final class Neo4JGraphFeatures implements Graph.Features {
             }
         }
 
-        private final VertexPropertyFeatures vertexPropertyFeatures = new Neo4JVertexPropertyFeatures();
+        private final VertexPropertyFeatures vertexPropertyFeatures;
+        private final boolean readonly;
+
+        Neo4JVertexFeatures(boolean readonly) {
+            super(readonly);
+            // initialize fields
+            this.readonly = readonly;
+            this.vertexPropertyFeatures = new Neo4JVertexPropertyFeatures(readonly);
+        }
+
+        @Override
+        @FeatureDescriptor(name = FEATURE_ADD_VERTICES)
+        public boolean supportsAddVertices() {
+            return !readonly;
+        }
+
+        @Override
+        @FeatureDescriptor(name = FEATURE_REMOVE_VERTICES)
+        public boolean supportsRemoveVertices() {
+            return !readonly;
+        }
 
         @Override
         public VertexPropertyFeatures properties() {
@@ -395,6 +427,24 @@ public final class Neo4JGraphFeatures implements Graph.Features {
         }
 
         private final EdgePropertyFeatures edgePropertyFeatures = new Neo4JEdgePropertyFeatures();
+        private final boolean readonly;
+
+        Neo4JEdgeFeatures(boolean readonly) {
+            super(readonly);
+            this.readonly = readonly;
+        }
+
+        @Override
+        @FeatureDescriptor(name = FEATURE_ADD_EDGES)
+        public boolean supportsAddEdges() {
+            return !readonly;
+        }
+
+        @Override
+        @FeatureDescriptor(name = FEATURE_REMOVE_EDGES)
+        public boolean supportsRemoveEdges() {
+            return !readonly;
+        }
 
         @Override
         public EdgePropertyFeatures properties() {
@@ -403,6 +453,24 @@ public final class Neo4JGraphFeatures implements Graph.Features {
     }
 
     private static class Neo4JElementFeatures implements ElementFeatures {
+
+        private final boolean readonly;
+
+        Neo4JElementFeatures(boolean readonly) {
+            this.readonly = readonly;
+        }
+
+        @Override
+        @FeatureDescriptor(name = FEATURE_ADD_PROPERTY)
+        public boolean supportsAddProperty() {
+            return !readonly;
+        }
+
+        @Override
+        @FeatureDescriptor(name = FEATURE_REMOVE_PROPERTY)
+        public boolean supportsRemoveProperty() {
+            return !readonly;
+        }
 
         @Override
         @FeatureDescriptor(name = FEATURE_USER_SUPPLIED_IDS)
@@ -435,9 +503,15 @@ public final class Neo4JGraphFeatures implements Graph.Features {
         }
     }
 
-    private GraphFeatures graphFeatures = new Neo4JGraphGraphFeatures();
-    private VertexFeatures vertexFeatures = new Neo4JVertexFeatures();
-    private EdgeFeatures edgeFeatures = new Neo4JEdgeFeatures();
+    private final GraphFeatures graphFeatures = new Neo4JGraphGraphFeatures();
+    private final VertexFeatures vertexFeatures;
+    private final EdgeFeatures edgeFeatures;
+
+    Neo4JGraphFeatures(boolean readonly) {
+        // initialize fields
+        this.vertexFeatures = new Neo4JVertexFeatures(readonly);
+        this.edgeFeatures = new Neo4JEdgeFeatures(readonly);
+    }
 
     @Override
     public GraphFeatures graph() {

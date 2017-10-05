@@ -76,13 +76,14 @@ class Neo4JSession implements AutoCloseable {
     private final Set<Neo4JEdge> edgeUpdateQueue = new HashSet<>();
     private final Set<Neo4JVertex> vertexDeleteQueue = new HashSet<>();
     private final Set<Neo4JEdge> edgeDeleteQueue = new HashSet<>();
+    private final boolean readonly;
 
     private org.neo4j.driver.v1.Transaction transaction;
     private boolean verticesLoaded = false;
     private boolean edgesLoaded = false;
     private boolean profilerEnabled = false;
 
-    public Neo4JSession(Neo4JGraph graph, Session session, Neo4JElementIdProvider<?> vertexIdProvider, Neo4JElementIdProvider<?> edgeIdProvider) {
+    Neo4JSession(Neo4JGraph graph, Session session, Neo4JElementIdProvider<?> vertexIdProvider, Neo4JElementIdProvider<?> edgeIdProvider, boolean readonly) {
         Objects.requireNonNull(graph, "graph cannot be null");
         Objects.requireNonNull(session, "session cannot be null");
         Objects.requireNonNull(vertexIdProvider, "vertexIdProvider cannot be null");
@@ -96,6 +97,7 @@ class Neo4JSession implements AutoCloseable {
         this.session = session;
         this.vertexIdProvider = vertexIdProvider;
         this.edgeIdProvider = edgeIdProvider;
+        this.readonly = readonly;
     }
 
     public org.neo4j.driver.v1.Transaction beginTransaction() {

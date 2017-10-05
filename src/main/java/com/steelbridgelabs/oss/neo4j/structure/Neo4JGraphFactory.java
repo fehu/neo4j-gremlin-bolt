@@ -49,13 +49,15 @@ public class Neo4JGraphFactory {
             // create providers
             Neo4JElementIdProvider<?> vertexIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JVertexIdProviderClassNameConfigurationKey));
             Neo4JElementIdProvider<?> edgeIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JEdgeIdProviderClassNameConfigurationKey));
+            // readonly
+            boolean readonly = configuration.getBoolean(Neo4JGraphConfigurationBuilder.Neo4JReadonlyConfigurationKey);
             // graph instance
             Neo4JGraph graph;
             // check a read partition is required
             if (graphName != null)
-                graph = new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration);
+                graph = new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration, readonly);
             else
-                graph = new Neo4JGraph(new NoReadPartition(), new String[]{}, driver, vertexIdProvider, edgeIdProvider, configuration);
+                graph = new Neo4JGraph(new NoReadPartition(), new String[]{}, driver, vertexIdProvider, edgeIdProvider, configuration, readonly);
             // close driver when graph is closed
             graph.addCloseListener(g -> driver.close());
             // return graph instance
