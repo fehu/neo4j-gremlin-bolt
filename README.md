@@ -141,7 +141,7 @@ Cons:
 
 The library will prefix CYPHER statements with the PROFILE clause dumping the output into the log file, example: 
 
-````
+```
 2016-08-26 23:19:42.226  INFO 98760 --- [-f6753a03391b-1] c.s.o.n.s.summary.ResultSummaryLogger    : Profile for CYPHER statement: Statement{text='PROFILE MATCH (n:Person{id: {id}})-[r:HAS_ADDRESS]->(m) RETURN n, r, m', parameters={id: 1306984}}
 
 +----------------------+----------------+------+---------+-----------+
@@ -155,7 +155,7 @@ The library will prefix CYPHER statements with the PROFILE clause dumping the ou
 | |                    +----------------+------+---------+-----------+
 | +NodeUniqueIndexSeek |              0 |    1 |       2 | n         |
 +----------------------+----------------+------+---------+-----------+
-````
+```
 
 ## Working with Vertices and Edges
 
@@ -188,20 +188,20 @@ Create a new [Vertex](http://tinkerpop.apache.org/javadocs/current/core/org/apac
 
 To compile the code and run all the unit tests:
 
-````
+```
 mvn clean install
-````
+```
 
 To run the Tinkerpop integration tests you need a running instance of the neo4j
 server. The easiest way to get one up and running is by using the official neo4j
 docker image:
 
-````
-docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.2-enterprise
-````
+```
+docker run -d --name neo4j -p 7687:7687 -p 7474:7474 -e NEO4J_AUTH=neo4j/neo4j123 -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:3.4-enterprise
+```
 
 And then execute the integration tests by running the following command:
 
-````
+```
 mvn test -Pintegration-test
-````
+```

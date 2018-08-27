@@ -268,13 +268,13 @@ public class Neo4JVertex extends Neo4JElement implements Vertex {
             TypeRepresentation type = (TypeRepresentation)value.type();
             // process value type
             switch (type.constructor()) {
-                case LIST_TyCon:
+                case LIST:
                     // process values
                     properties.put(key, value.asList().stream().map(item -> new Neo4JVertexProperty<>(this, propertyIdProvider.incrementAndGet(), key, item)).collect(Collectors.toList()));
                     // cardinality
                     cardinalities.put(key, VertexProperty.Cardinality.list);
                     break;
-                case MAP_TyCon:
+                case MAP:
                     throw new RuntimeException("TODO: implement maps");
                 default:
                     // add property
