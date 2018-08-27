@@ -124,6 +124,38 @@ Cons:
     }
 ```
 
+## Neo4J BOLT+Routing support
+
+* Create a graph instance with the given transaction bookmark on a Write server of the Neo4J Causal cluster
+
+```java
+    // create graph instance
+    try (Graph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider, false, "bookmark-1")) {
+        // begin transaction
+        try (Transaction transaction = graph.tx()) {
+            // use Graph API to create, update and delete Vertices and Edges
+
+            // commit transaction
+            transaction.commit();
+        }
+    }
+```
+
+* Create a graph instance with the given transaction bookmark on a Read server of the Neo4J Causal cluster
+
+```java
+    // create graph instance
+    try (Graph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider, true, "bookmark-1")) {
+        // begin transaction
+        try (Transaction transaction = graph.tx()) {
+            // use Graph API to read Vertices and Edges
+
+            // commit transaction
+            transaction.commit();
+        }
+    }
+```
+
 ## Enabling Neo4J profiler
 
 * Set logger INFO level to the package: com.steelbridgelabs.oss.neo4j.structure.summary 
@@ -188,7 +220,7 @@ Create a new [Vertex](http://tinkerpop.apache.org/javadocs/current/core/org/apac
 
 To compile the code and run all the unit tests:
 
-```
+```bash
 mvn clean install
 ```
 
