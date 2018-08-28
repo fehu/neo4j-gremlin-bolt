@@ -17,18 +17,17 @@
  * under the License.
  */
 
-package com.steelbridgelabs.oss.neo4j;
+package com.steelbridgelabs.oss.neo4j.structure;
 
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JGraph;
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
-import org.apache.tinkerpop.gremlin.structure.StructureStandardSuite;
+import org.apache.tinkerpop.gremlin.process.ProcessStandardSuite;
 import org.junit.runner.RunWith;
 
 /**
  * @author Rogelio J. Baucells
  */
-@RunWith(StructureStandardSuite.class)
+@RunWith(ProcessStandardSuite.class)
 @GraphProviderClass(provider = Neo4JTestGraphProvider.class, graph = Neo4JGraph.class)
-public class Neo4JStructureStandardTest {
+public class Neo4JProcessStandardTest {
 
 }
