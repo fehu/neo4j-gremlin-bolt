@@ -17,21 +17,14 @@
  * under the License.
  */
 
-package com.steelbridgelabs.oss.neo4j;
+package com.steelbridgelabs.oss.neo4j.structure;
 
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JEdge;
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JGraph;
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JGraphConfigurationBuilder;
-import com.steelbridgelabs.oss.neo4j.structure.Neo4JVertex;
 import org.apache.commons.configuration.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
-import org.neo4j.driver.v1.AuthTokens;
-import org.neo4j.driver.v1.Config;
 import org.neo4j.driver.v1.Driver;
-import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
 
@@ -58,6 +51,7 @@ public class Neo4JTestGraphProvider extends AbstractGraphProvider {
     public Map<String, Object> getBaseConfiguration(String graphName, Class<?> test, String testMethodName, LoadGraphWith.GraphData graphData) {
         // build configuration
         Configuration configuration = Neo4JGraphConfigurationBuilder.connect("localhost", "neo4j", "neo4j123")
+            .withIdentifier("localhost-neo4j")
             .withName(graphName)
             .withElementIdProvider(ElementIdProvider.class)
             .build();
@@ -77,17 +71,16 @@ public class Neo4JTestGraphProvider extends AbstractGraphProvider {
             // close graph instance
             graph.close();
         }
-        // connect to server
-        try (Driver driver = GraphDatabase.driver(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUrlConfigurationKey), AuthTokens.basic(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUsernameConfigurationKey), configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JPasswordConfigurationKey)), Config.defaultConfig())) {
-            // open session
-            try (Session session = driver.session()) {
-                // begin transaction
-                try (org.neo4j.driver.v1.Transaction transaction = session.beginTransaction()) {
-                    // delete everything in database
-                    transaction.run(new Statement("MATCH (n) DETACH DELETE n"));
-                    // commit
-                    transaction.success();
-                }
+        // create driver instance
+        Driver driver = Neo4JGraphFactory.createDriverInstance(configuration);
+        // open session
+        try (Session session = driver.session()) {
+            // begin transaction
+            try (org.neo4j.driver.v1.Transaction transaction = session.beginTransaction()) {
+                // delete everything in database
+                transaction.run(new Statement("MATCH (n) DETACH DELETE n"));
+                // commit
+                transaction.success();
             }
         }
     }

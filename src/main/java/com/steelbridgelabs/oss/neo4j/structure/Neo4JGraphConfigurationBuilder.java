@@ -22,6 +22,7 @@ import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author Rogelio J. Baucells
@@ -29,6 +30,7 @@ import java.util.Objects;
 public final class Neo4JGraphConfigurationBuilder {
 
     public static final String Neo4JGraphNameConfigurationKey = "neo4j.graph.name";
+    public static final String Neo4JIdentifierConfigurationKey = "neo4j.identifier";
     public static final String Neo4JUrlConfigurationKey = "neo4j.url";
     public static final String Neo4JHostnameConfigurationKey = "neo4j.hostname";
     public static final String Neo4JPortConfigurationKey = "neo4j.port";
@@ -43,6 +45,7 @@ public final class Neo4JGraphConfigurationBuilder {
     private final String username;
     private final String password;
     private String graphName;
+    private String identifier;
     private String vertexIdProviderClassName = null;
     private String edgeIdProviderClassName = null;
     private String propertyIdProviderClassName = null;
@@ -67,6 +70,14 @@ public final class Neo4JGraphConfigurationBuilder {
     public static Neo4JGraphConfigurationBuilder connect(String hostname, String username, String password) {
         // create builder instance
         return new Neo4JGraphConfigurationBuilder(hostname, (short)7687, username, password);
+    }
+
+    public Neo4JGraphConfigurationBuilder withIdentifier(String identifier) {
+        Objects.requireNonNull(identifier, "identifier cannot be null");
+        // store identifier
+        this.identifier = identifier;
+        // return builder
+        return this;
     }
 
     public Neo4JGraphConfigurationBuilder withName(String graphName) {
@@ -111,6 +122,8 @@ public final class Neo4JGraphConfigurationBuilder {
     public Configuration build() {
         // create configuration instance
         Configuration configuration = new BaseConfiguration();
+        // identifier
+        configuration.setProperty(Neo4JIdentifierConfigurationKey, identifier != null ? identifier : UUID.randomUUID().toString());
         // url
         configuration.setProperty(Neo4JUrlConfigurationKey, "bolt://" + hostname + ":" + port);
         // hostname
