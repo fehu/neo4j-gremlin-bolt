@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.steelbridgelabs.oss.neo4j;
+package com.steelbridgelabs.oss.neo4j.structure;
 
 import com.steelbridgelabs.oss.neo4j.structure.Neo4JElementIdProvider;
 import org.neo4j.driver.v1.types.Entity;

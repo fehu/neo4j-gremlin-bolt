@@ -30,6 +30,7 @@ import org.apache.tinkerpop.gremlin.structure.util.AbstractThreadLocalTransactio
 import org.apache.tinkerpop.gremlin.structure.util.GraphFactoryClass;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.structure.util.TransactionException;
+import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Statement;
 import org.neo4j.driver.v1.StatementResult;
@@ -102,7 +103,6 @@ public class Neo4JGraph implements Graph {
         }
     }
 
-    private final Neo4JGraphFeatures features = new Neo4JGraphFeatures();
     private final Neo4JReadPartition partition;
     private final Set<String> vertexLabels;
     private final Driver driver;
@@ -111,6 +111,8 @@ public class Neo4JGraph implements Graph {
     private final ThreadLocal<Neo4JSession> session = ThreadLocal.withInitial(() -> null);
     private final Neo4JTransaction transaction = new Neo4JTransaction();
     private final Configuration configuration;
+    private final boolean readonly;
+    private final Iterable<String> bookmarks;
 
     private final Set<Consumer<Neo4JGraph>> closeListeners = new HashSet<>();
 
@@ -135,6 +137,37 @@ public class Neo4JGraph implements Graph {
         this.edgeIdProvider = edgeIdProvider;
         // graph factory configuration (required for tinkerpop test suite)
         this.configuration = null;
+        // general purpose graph
+        this.readonly = false;
+        this.bookmarks = null;
+    }
+
+    /**
+     * Creates a {@link Neo4JGraph} instance.
+     *
+     * @param driver           The {@link Driver} instance with the database connection information.
+     * @param vertexIdProvider The {@link Neo4JElementIdProvider} for the {@link Vertex} id generation.
+     * @param edgeIdProvider   The {@link Neo4JElementIdProvider} for the {@link Edge} id generation.
+     * @param readonly         {@code true} indicates the Graph instance will be used to read from the Neo4J database.
+     * @param bookmarks        The initial references to some previous transactions. Both null value and empty iterable are permitted, and indicate that the bookmarks do not exist or are unknown.
+     */
+    public Neo4JGraph(Driver driver, Neo4JElementIdProvider<?> vertexIdProvider, Neo4JElementIdProvider<?> edgeIdProvider, boolean readonly, String... bookmarks) {
+        Objects.requireNonNull(driver, "driver cannot be null");
+        Objects.requireNonNull(vertexIdProvider, "vertexIdProvider cannot be null");
+        Objects.requireNonNull(edgeIdProvider, "edgeIdProvider cannot be null");
+        // no label partition
+        this.partition = new NoReadPartition();
+        this.vertexLabels = Collections.emptySet();
+        // store driver instance
+        this.driver = driver;
+        // store providers
+        this.vertexIdProvider = vertexIdProvider;
+        this.edgeIdProvider = edgeIdProvider;
+        // graph factory configuration (required for tinkerpop test suite)
+        this.configuration = null;
+        // readonly & bookmarks
+        this.readonly = readonly;
+        this.bookmarks = Arrays.asList(bookmarks);
     }
 
     /**
@@ -164,6 +197,43 @@ public class Neo4JGraph implements Graph {
         this.edgeIdProvider = edgeIdProvider;
         // graph factory configuration (required for tinkerpop test suite)
         this.configuration = null;
+        // general purpose graph
+        this.readonly = false;
+        this.bookmarks = null;
+    }
+
+    /**
+     * Creates a {@link Neo4JGraph} instance with the given partition within the neo4j database.
+     *
+     * @param partition        The {@link Neo4JReadPartition} within the neo4j database.
+     * @param vertexLabels     The set of labels to append to vertices created by the {@link Neo4JGraph} session.
+     * @param driver           The {@link Driver} instance with the database connection information.
+     * @param vertexIdProvider The {@link Neo4JElementIdProvider} for the {@link Vertex} id generation.
+     * @param edgeIdProvider   The {@link Neo4JElementIdProvider} for the {@link Edge} id generation.
+     * @param readonly         {@code true} indicates the Graph instance will be used to read from the Neo4J database.
+     * @param bookmarks        The initial references to some previous transactions. Both null value and empty iterable are permitted, and indicate that the bookmarks do not exist or are unknown.
+     */
+    public Neo4JGraph(Neo4JReadPartition partition, String[] vertexLabels, Driver driver, Neo4JElementIdProvider<?> vertexIdProvider, Neo4JElementIdProvider<?> edgeIdProvider, boolean readonly, String... bookmarks) {
+        Objects.requireNonNull(partition, "partition cannot be null");
+        Objects.requireNonNull(vertexLabels, "vertexLabels cannot be null");
+        Objects.requireNonNull(driver, "driver cannot be null");
+        Objects.requireNonNull(vertexIdProvider, "vertexIdProvider cannot be null");
+        Objects.requireNonNull(edgeIdProvider, "edgeIdProvider cannot be null");
+        // initialize fields
+        this.partition = partition;
+        this.vertexLabels = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(vertexLabels)));
+        this.driver = driver;
+        // validate partition & additional labels
+        if (!partition.containsVertex(this.vertexLabels))
+            throw new IllegalArgumentException("Invalid vertexLabels, vertices created by the graph will not be part of the given partition");
+        // store providers
+        this.vertexIdProvider = vertexIdProvider;
+        this.edgeIdProvider = edgeIdProvider;
+        // graph factory configuration (required for tinkerpop test suite)
+        this.configuration = null;
+        // readonly & bookmarks
+        this.readonly = readonly;
+        this.bookmarks = Arrays.asList(bookmarks);
     }
 
     /**
@@ -176,7 +246,7 @@ public class Neo4JGraph implements Graph {
      * @param edgeIdProvider   The {@link Neo4JElementIdProvider} for the {@link Edge} id generation.
      * @param configuration    The {@link Configuration} used to create the {@link Graph} instance.
      */
-    Neo4JGraph(Neo4JReadPartition partition, String[] vertexLabels, Driver driver, Neo4JElementIdProvider<?> vertexIdProvider, Neo4JElementIdProvider<?> edgeIdProvider, Configuration configuration) {
+    Neo4JGraph(Neo4JReadPartition partition, String[] vertexLabels, Driver driver, Neo4JElementIdProvider<?> vertexIdProvider, Neo4JElementIdProvider<?> edgeIdProvider, Configuration configuration, boolean readonly, String... bookmarks) {
         Objects.requireNonNull(partition, "partition cannot be null");
         Objects.requireNonNull(vertexLabels, "vertexLabels cannot be null");
         Objects.requireNonNull(driver, "driver cannot be null");
@@ -195,6 +265,9 @@ public class Neo4JGraph implements Graph {
         this.edgeIdProvider = edgeIdProvider;
         // graph factory configuration (required for tinkerpop test suite)
         this.configuration = configuration;
+        // general purpose graph
+        this.readonly = readonly;
+        this.bookmarks = Arrays.asList(bookmarks);
     }
 
     Neo4JSession currentSession() {
@@ -202,7 +275,7 @@ public class Neo4JGraph implements Graph {
         Neo4JSession session = this.session.get();
         if (session == null) {
             // create new session
-            session = new Neo4JSession(this, driver.session(), vertexIdProvider, edgeIdProvider);
+            session = new Neo4JSession(this, driver.session(readonly ? AccessMode.READ : AccessMode.WRITE, bookmarks), vertexIdProvider, edgeIdProvider, readonly);
             // attach it to current thread
             this.session.set(session);
         }
@@ -250,6 +323,9 @@ public class Neo4JGraph implements Graph {
      */
     @Override
     public Vertex addVertex(Object... keyValues) {
+        // check graph is readonly
+        if (readonly)
+            throw Graph.Exceptions.vertexAdditionsNotSupported();
         // get current session
         Neo4JSession session = currentSession();
         // transaction should be ready for io operations
@@ -514,6 +590,6 @@ public class Neo4JGraph implements Graph {
      */
     @Override
     public Features features() {
-        return features;
+        return new Neo4JGraphFeatures(readonly);
     }
 }

@@ -79,7 +79,7 @@ public class Neo4JSessionWhileAddEdgeTest {
         Mockito.when(provider.generate()).thenAnswer(invocation -> 1L);
         ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
         Mockito.when(provider.processIdentifier(argument.capture())).thenAnswer(invocation -> argument.getValue());
-        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider)) {
+        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider, false)) {
             // act
             Neo4JEdge edge = session.addEdge("label1", outVertex, inVertex);
             // assert
@@ -98,7 +98,7 @@ public class Neo4JSessionWhileAddEdgeTest {
         Mockito.when(provider.generate()).thenAnswer(invocation -> 1L);
         ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
         Mockito.when(provider.processIdentifier(argument.capture())).thenAnswer(invocation -> argument.getValue());
-        try (Neo4JSession session = new Neo4JSession(graph, Mockito.mock(Session.class), provider, provider)) {
+        try (Neo4JSession session = new Neo4JSession(graph, Mockito.mock(Session.class), provider, provider, false)) {
             // act
             Neo4JEdge edge = session.addEdge("label1", outVertex, inVertex);
             // assert
@@ -117,7 +117,7 @@ public class Neo4JSessionWhileAddEdgeTest {
         Mockito.when(provider.generate()).thenAnswer(invocation -> 1L);
         ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
         Mockito.when(provider.processIdentifier(argument.capture())).thenAnswer(invocation -> argument.getValue());
-        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider)) {
+        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider, false)) {
             // act
             Neo4JEdge edge = session.addEdge("label1", outVertex, inVertex, "k1", "v1", "k2", 2L, "k3", true);
             // assert
@@ -141,7 +141,7 @@ public class Neo4JSessionWhileAddEdgeTest {
         Mockito.when(provider.generate()).thenAnswer(invocation -> 1L);
         ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
         Mockito.when(provider.processIdentifier(argument.capture())).thenAnswer(invocation -> argument.getValue());
-        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider)) {
+        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider, false)) {
             // add edge
             session.addEdge("label1", outVertex, inVertex);
             // act
@@ -167,7 +167,7 @@ public class Neo4JSessionWhileAddEdgeTest {
         Mockito.when(provider.generate()).thenAnswer(invocation -> 1L);
         ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
         Mockito.when(provider.processIdentifier(argument.capture())).thenAnswer(invocation -> argument.getValue());
-        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider)) {
+        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider, false)) {
             // transaction
             try (org.neo4j.driver.v1.Transaction tx = session.beginTransaction()) {
                 // add edge
@@ -175,7 +175,7 @@ public class Neo4JSessionWhileAddEdgeTest {
                 // act
                 Iterator<Edge> edges = session.edges(new Object[0]);
                 // assert
-                Assert.assertNotNull("Failed to create edge", edges.hasNext());
+                Assert.assertTrue("Failed to create edge", edges.hasNext());
                 Edge edge = edges.next();
                 Assert.assertNotNull("Failed to create edge", edge);
                 Assert.assertEquals("Failed to assign edge label", "label1", edge.label());
@@ -198,7 +198,7 @@ public class Neo4JSessionWhileAddEdgeTest {
         Mockito.when(provider.generate()).thenAnswer(invocation -> null);
         ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
         Mockito.when(provider.processIdentifier(argument.capture())).thenAnswer(invocation -> argument.getValue());
-        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider)) {
+        try (Neo4JSession session = new Neo4JSession(graph, this.session, provider, provider, false)) {
             // transaction
             try (org.neo4j.driver.v1.Transaction tx = session.beginTransaction()) {
                 // add edge

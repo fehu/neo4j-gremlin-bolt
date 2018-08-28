@@ -29,35 +29,37 @@ import org.neo4j.driver.v1.GraphDatabase;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Rogelio J. Baucells
  */
 public class Neo4JGraphFactory {
 
+    private static final Map<String, Driver> instances = new ConcurrentHashMap<>();
+
     public static Graph open(Configuration configuration) {
         if (configuration == null)
             throw Graph.Exceptions.argumentCanNotBeNull("configuration");
         try {
-            // neo4j driver configuration
-            Config config = Config.build()
-                .toConfig();
             // graph name
             String graphName = configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JGraphNameConfigurationKey);
             // create driver instance
-            Driver driver = GraphDatabase.driver(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUrlConfigurationKey), AuthTokens.basic(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUsernameConfigurationKey), configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JPasswordConfigurationKey)), config);
+            Driver driver = createDriverInstance(configuration);
             // create providers
             Neo4JElementIdProvider<?> vertexIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JVertexIdProviderClassNameConfigurationKey));
             Neo4JElementIdProvider<?> edgeIdProvider = loadProvider(driver, configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JEdgeIdProviderClassNameConfigurationKey));
+            // readonly
+            boolean readonly = configuration.getBoolean(Neo4JGraphConfigurationBuilder.Neo4JReadonlyConfigurationKey);
             // graph instance
             Neo4JGraph graph;
             // check a read partition is required
             if (graphName != null)
-                graph = new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration);
+                graph = new Neo4JGraph(new AnyLabelReadPartition(graphName), new String[]{graphName}, driver, vertexIdProvider, edgeIdProvider, configuration, readonly);
             else
-                graph = new Neo4JGraph(new NoReadPartition(), new String[]{}, driver, vertexIdProvider, edgeIdProvider, configuration);
-            // close driver when graph is closed
-            graph.addCloseListener(g -> driver.close());
+                graph = new Neo4JGraph(new NoReadPartition(), new String[]{}, driver, vertexIdProvider, edgeIdProvider, configuration, readonly);
             // return graph instance
             return graph;
         }
@@ -65,6 +67,20 @@ public class Neo4JGraphFactory {
             // throw runtime exception
             throw new RuntimeException("Error creating Graph instance from configuration", ex);
         }
+    }
+
+    static Driver createDriverInstance(Configuration configuration) {
+        Objects.requireNonNull(configuration, "configuration cannot be null");
+        // identifier
+        String identifier = Objects.requireNonNull(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JIdentifierConfigurationKey), "Configuration does not contain identifier value");
+        // check we have created an instance for this identifier
+        return instances.computeIfAbsent(identifier, key -> {
+            // neo4j driver configuration
+            Config config = Config.build()
+                .toConfig();
+            // create driver instance
+            return GraphDatabase.driver(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUrlConfigurationKey), AuthTokens.basic(configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JUsernameConfigurationKey), configuration.getString(Neo4JGraphConfigurationBuilder.Neo4JPasswordConfigurationKey)), config);
+        });
     }
 
     static Neo4JElementIdProvider<?> loadProvider(Driver driver, String className) throws ClassNotFoundException, IllegalAccessException, InstantiationException {

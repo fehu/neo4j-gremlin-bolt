@@ -25,6 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.Statement;
@@ -53,9 +54,10 @@ public class Neo4JGraphWhileAddVertexTest {
     private StatementResult statementResult;
 
     @Test
+    @SuppressWarnings("unchecked")
     public void givenLabelShouldAddVertex() {
         // arrange
-        Mockito.when(driver.session()).thenAnswer(invocation -> session);
+        Mockito.when(driver.session(Mockito.any(AccessMode.class), Mockito.any(Iterable.class))).thenReturn(session);
         Mockito.when(session.beginTransaction()).thenAnswer(invocation -> transaction);
         Mockito.when(transaction.run(Mockito.any(Statement.class))).thenAnswer(invocation -> statementResult);
         Mockito.when(provider.fieldName()).thenAnswer(invocation -> "id");
@@ -72,9 +74,10 @@ public class Neo4JGraphWhileAddVertexTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void givenKeyValuePairShouldAddVertex() {
         // arrange
-        Mockito.when(driver.session()).thenAnswer(invocation -> session);
+        Mockito.when(driver.session(Mockito.any(AccessMode.class), Mockito.any(Iterable.class))).thenReturn(session);
         Mockito.when(session.beginTransaction()).thenAnswer(invocation -> transaction);
         Mockito.when(transaction.run(Mockito.any(Statement.class))).thenAnswer(invocation -> statementResult);
         Mockito.when(provider.fieldName()).thenAnswer(invocation -> "id");

@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.neo4j.driver.v1.AccessMode;
 import org.neo4j.driver.v1.Driver;
 import org.neo4j.driver.v1.Session;
 
@@ -43,8 +44,10 @@ public class Neo4JGraphWhileCurrentSessionTest {
     private Neo4JElementIdProvider provider;
 
     @Test
+    @SuppressWarnings("unchecked")
     public void givenNewGraphShouldCreateNewSession() {
         // arrange
+        Mockito.when(driver.session(Mockito.any(AccessMode.class), Mockito.any(Iterable.class))).thenReturn(session);
         Mockito.when(driver.session()).thenAnswer(invocation -> session);
         Mockito.when(provider.fieldName()).thenAnswer(invocation -> "id");
         try (Neo4JGraph graph = new Neo4JGraph(driver, provider, provider)) {
@@ -57,9 +60,10 @@ public class Neo4JGraphWhileCurrentSessionTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void givenGraphWithSessionShouldReturnSameSession() {
         // arrange
-        Mockito.when(driver.session()).thenAnswer(invocation -> session);
+        Mockito.when(driver.session(Mockito.any(AccessMode.class), Mockito.any(Iterable.class))).thenReturn(session);
         Mockito.when(provider.fieldName()).thenAnswer(invocation -> "id");
         try (Neo4JGraph graph = new Neo4JGraph(driver, provider, provider)) {
             try (Neo4JSession neo4JSession1 = graph.currentSession()) {
@@ -74,9 +78,10 @@ public class Neo4JGraphWhileCurrentSessionTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void givenGraphWithSessionShouldReturnAnotherSessionFromADifferentThread() throws InterruptedException {
         // arrange
-        Mockito.when(driver.session()).thenAnswer(invocation -> session);
+        Mockito.when(driver.session(Mockito.any(AccessMode.class), Mockito.any(Iterable.class))).thenReturn(session);
         Mockito.when(provider.fieldName()).thenAnswer(invocation -> "id");
         try (Neo4JGraph graph = new Neo4JGraph(driver, provider, provider)) {
             try (final Neo4JSession neo4JSession1 = graph.currentSession()) {
