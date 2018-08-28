@@ -1,5 +1,11 @@
 # Change log
 
+## 0.3.0
+
+* Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.6.1
+* Updated [Apache Tinkerpop](http://tinkerpop.apache.org/) to version 3.3.3
+* Added support for BOLT+Routing bookmarks 
+
 ## 0.2.27
 
 * Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.4.4

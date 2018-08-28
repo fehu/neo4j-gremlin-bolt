@@ -124,6 +124,38 @@ Cons:
     }
 ```
 
+## Neo4J BOLT+Routing support
+
+* Create a graph instance with the given transaction bookmark on a Write server of the Neo4J Causal cluster
+
+```java
+    // create graph instance
+    try (Graph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider, false, "bookmark-1")) {
+        // begin transaction
+        try (Transaction transaction = graph.tx()) {
+            // use Graph API to create, update and delete Vertices and Edges
+
+            // commit transaction
+            transaction.commit();
+        }
+    }
+```
+
+* Create a graph instance with the given transaction bookmark on a Read server of the Neo4J Causal cluster
+
+```java
+    // create graph instance
+    try (Graph graph = new Neo4JGraph(driver, vertexIdProvider, edgeIdProvider, true, "bookmark-1")) {
+        // begin transaction
+        try (Transaction transaction = graph.tx()) {
+            // use Graph API to read Vertices and Edges
+
+            // commit transaction
+            transaction.commit();
+        }
+    }
+```
+
 ## Enabling Neo4J profiler
 
 * Set logger INFO level to the package: com.steelbridgelabs.oss.neo4j.structure.summary 
@@ -141,7 +173,7 @@ Cons:
 
 The library will prefix CYPHER statements with the PROFILE clause dumping the output into the log file, example: 
 
-````
+```
 2016-08-26 23:19:42.226  INFO 98760 --- [-f6753a03391b-1] c.s.o.n.s.summary.ResultSummaryLogger    : Profile for CYPHER statement: Statement{text='PROFILE MATCH (n:Person{id: {id}})-[r:HAS_ADDRESS]->(m) RETURN n, r, m', parameters={id: 1306984}}
 
 +----------------------+----------------+------+---------+-----------+
@@ -155,7 +187,7 @@ The library will prefix CYPHER statements with the PROFILE clause dumping the ou
 | |                    +----------------+------+---------+-----------+
 | +NodeUniqueIndexSeek |              0 |    1 |       2 | n         |
 +----------------------+----------------+------+---------+-----------+
-````
+```
 
 ## Working with Vertices and Edges
 
@@ -188,20 +220,20 @@ Create a new [Vertex](http://tinkerpop.apache.org/javadocs/current/core/org/apac
 
 To compile the code and run all the unit tests:
 
-````
+```bash
 mvn clean install
-````
+```
 
 To run the Tinkerpop integration tests you need a running instance of the neo4j
 server. The easiest way to get one up and running is by using the official neo4j
 docker image:
 
-````
-docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.2-enterprise
-````
+```
+docker run -d --name neo4j -p 7687:7687 -p 7474:7474 -e NEO4J_AUTH=neo4j/neo4j123 -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:3.4-enterprise
+```
 
 And then execute the integration tests by running the following command:
 
-````
+```
 mvn test -Pintegration-test
-````
+```
