@@ -7,7 +7,7 @@ sudo:
 services:
     - docker
 before_install:
-    - docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 neo4j:3.1-enterprise
+    - docker run -d --name neo4j -p 7687:7687 -e NEO4J_AUTH=neo4j/neo4j123 -e NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j:3.4-enterprise
     - docker ps -a
 install:
     mvn install -P !build-extras -DskipTests=true -Dmaven.javadoc.skip=true -B -V
@@ -22,4 +22,5 @@ after_success:
     - .travis/before-deploy.sh
     - .travis/deploy.sh
 after_script:
+    - docker stop neo4j
     - docker rm -f neo4j
