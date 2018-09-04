@@ -319,6 +319,21 @@ public class Neo4JGraph implements Graph {
     }
 
     /**
+     * Return the bookmark received following the last completed
+     * {@linkplain Transaction transaction}. If no bookmark was received
+     * or if this transaction was rolled back, the bookmark value will
+     * be null.
+     *
+     * @return a reference to a previous transaction
+     */
+    public String lastBookmark() {
+        // get current session
+        Neo4JSession session = currentSession();
+        // return bookmark in session
+        return session.lastBookmark();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

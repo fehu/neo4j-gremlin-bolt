@@ -1,5 +1,9 @@
 # Change log
 
+## 0.3.1
+
+* Added support for BOLT+Routing bookmarks in Graph instance
+
 ## 0.3.0
 
 * Updated [BOLT driver](https://github.com/neo4j/neo4j-java-driver) to version 1.6.1
