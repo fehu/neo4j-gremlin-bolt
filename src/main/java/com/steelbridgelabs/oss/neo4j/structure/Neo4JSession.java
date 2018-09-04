@@ -113,11 +113,11 @@ class Neo4JSession implements AutoCloseable {
         return transaction;
     }
 
-    public boolean isTransactionOpen() {
+    boolean isTransactionOpen() {
         return transaction != null && transaction.isOpen();
     }
 
-    public void commit() {
+    void commit() {
         // check we have an open transaction
         if (transaction != null) {
             // log information
@@ -160,7 +160,7 @@ class Neo4JSession implements AutoCloseable {
         }
     }
 
-    public void rollback() {
+    void rollback() {
         // check we have an open transaction
         if (transaction != null) {
             // log information
@@ -213,7 +213,7 @@ class Neo4JSession implements AutoCloseable {
         }
     }
 
-    public void closeTransaction() {
+    void closeTransaction() {
         // check we have an open transaction
         if (transaction != null) {
             // log information
@@ -226,7 +226,12 @@ class Neo4JSession implements AutoCloseable {
         }
     }
 
-    public Neo4JVertex addVertex(Object... keyValues) {
+    String lastBookmark() {
+        // last bookmark in session
+        return session.lastBookmark();
+    }
+
+    Neo4JVertex addVertex(Object... keyValues) {
         Objects.requireNonNull(keyValues, "keyValues cannot be null");
         // verify parameters are key/value pairs
         ElementHelper.legalPropertyKeyValueArray(keyValues);
@@ -378,7 +383,7 @@ class Neo4JSession implements AutoCloseable {
             .filter(Objects::nonNull);
     }
 
-    public Iterator<Edge> edges(Object[] ids) {
+    Iterator<Edge> edges(Object[] ids) {
         Objects.requireNonNull(ids, "ids cannot be null");
         // verify identifiers
         verifyIdentifiers(Edge.class, ids);
